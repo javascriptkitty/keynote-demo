@@ -1,0 +1,50 @@
+.header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: white;
+    z-index: 10;
+    padding: 24px 30px;
+}
+
+.header__content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2%;
+}
+
+.header__content_menu {
+    display: flex;
+    align-items: center;
+    gap: 85px;
+}
+
+.header__nav {
+    display: flex;
+    gap: 21px;
+}
+
+.header__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.header__chevron {
+    width: 9px;
+    margin: 2px 4px;
+    align-self: flex-end;
+}
+.header__actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.header__location {
+    display: flex;
+    gap: 4px;
+}

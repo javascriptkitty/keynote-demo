@@ -1,0 +1,53 @@
+@font-face {
+    font-family: 'Gilroy';
+    src: url('./assets/fonts/Gilroy-Regular.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    margin: 0;
+    font-family:
+        'Gilroy',
+        system-ui,
+        -apple-system,
+        sans-serif;
+    background: #ffffff;
+    color: #000000;
+}
+
+#root {
+    min-height: 100vh;
+    width: 100%;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 3.75rem;
+    line-height: 1.07;
+    letter-spacing: -0.04em;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+button {
+    all: unset;
+    cursor: pointer;
+}
