@@ -179,3 +179,7 @@
     color: #444;
     gap: 2px;
 }
+
+.chatbot__voice-btn--active {
+    opacity: 0.5;
+}

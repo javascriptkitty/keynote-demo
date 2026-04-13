@@ -1,20 +1,24 @@
 export const promptReplies: Record<string, string> = {
-    'Product setup':
-        'We can help you get started with a Pepsi display and recommend a product mix for your store.',
+    'Get products':
+        'You can start by ordering popular Pepsi products and placing them in visible areas to attract customers.',
+
     'Starter order':
-        'We can suggest a starter order of top-selling items like Pepsi, Doritos, and Walkers Crisps.',
-    'Cooler space':
-        'To recommend the best setup, we would usually ask how much cooler space you currently have for beverages.',
+        'A good starter order includes Pepsi, Doritos, and Walkers Crisps to cover the most common demand.',
+    'Delivery time':
+        'Delivery usually takes a few business days depending on your location and supplier availability.',
+
     Promotions:
-        'We can also help you explore promotional materials and display recommendations for your location.',
+        'There are no active promotions at the moment. A strong display and placement will still drive consistent sales.',
 }
 
-export const prompts = [
-    'Product setup',
-    'Starter order',
-    'Cooler space',
-    'Promotions',
-]
+export const prompts = Object.keys(promptReplies)
+
+export const initialPrompt =
+    "Hello, I'm the Team PepsiCo Agent. How can I help you today?"
+export const voiceNotSupportedText =
+    'Voice input is not supported in this browser.'
+export const dontRecognizeSpeechText =
+    'Sorry, I could not recognize your speech. Could you try again?'
 
 export type Sender = 'bot' | 'user'
 
