@@ -16,9 +16,8 @@
     margin: 0;
     text-align: center;
     max-width: 808px;
-    transform: translate(-5px,-8px);
+    transform: translate(-5px, -8px);
 }
-
 
 .hero_icon {
     position: absolute;

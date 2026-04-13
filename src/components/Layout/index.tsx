@@ -1,14 +1,14 @@
-import { type ReactNode } from "react";
-import Header from "../Header";
-import "./index.css";
+import { type ReactNode } from 'react';
+import Header from '../Header';
+import './index.css';
 
 const Layout = ({ children }: { children: ReactNode }) => {
-  return (
-    <div className="layout">
-      <Header />
-      <main>{children}</main>
-    </div>
-  );
+    return (
+        <div className="layout">
+            <Header />
+            <main>{children}</main>
+        </div>
+    );
 };
 
 export default Layout;

@@ -1,4 +1,4 @@
 interface Window {
-    SpeechRecognition: any
-    webkitSpeechRecognition: any
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
 }
