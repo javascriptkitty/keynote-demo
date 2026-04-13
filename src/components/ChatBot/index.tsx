@@ -7,44 +7,16 @@ import dotsIcon from '../../assets/img/dots.svg'
 import expandIcon from '../../assets/img/expand.svg'
 import hideIcon from '../../assets/img/hide.svg'
 import agentforceIcon from '../../assets/img/agentforce.svg'
+import { askGemini, FALLBACK_REPLY } from '../../api'
+import { createMessage, type Message, promptReplies, prompts } from './helper'
 import './index.css'
-
-type Message = {
-    id: number
-    text: string
-    sender: 'bot' | 'user'
-    meta?: string
-}
-
-const getCurrentTime = () => {
-    return new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-    })
-}
-
-const createBotMeta = () => `Team PepsiCo Agent • ${getCurrentTime()}`
-const createUserMeta = () => `Read • ${getCurrentTime()}`
-
-const promptReplies: Record<string, string> = {
-    'Product setup':
-        'We can help you get started with a Pepsi display and recommend a product mix for your store.',
-    'Starter order':
-        'We can suggest a starter order of top-selling items like Pepsi, Doritos, and Walkers Crisps.',
-    'Cooler space':
-        'To recommend the best setup, we would usually ask how much cooler space you currently have for beverages.',
-    Promotions:
-        'We can also help you explore promotional materials and display recommendations for your location.',
-}
-
-const prompts = ['Product setup', 'Starter order', 'Cooler space', 'Promotions']
 
 const ChatBot = () => {
     const [isOpen, setIsOpen] = useState(false)
     const [inputValue, setInputValue] = useState('')
     const [messages, setMessages] = useState<Message[]>([])
     const [isTyping, setIsTyping] = useState(false)
+    const [showFallbackPrompts, setShowFallbackPrompts] = useState(false)
 
     const messagesRef = useRef<HTMLDivElement | null>(null)
     const nextIdRef = useRef(0)
@@ -64,15 +36,15 @@ const ChatBot = () => {
         setIsTyping(true)
 
         setTimeout(() => {
-            const welcomeMessage: Message = {
-                id: getNextId(),
-                text: "Hello, I'm the Team PepsiCo Agent. How can I help you today?",
-                sender: 'bot',
-                meta: createBotMeta(),
-            }
-
             setIsTyping(false)
-            setMessages([welcomeMessage])
+            setShowFallbackPrompts(false)
+            setMessages([
+                createMessage(
+                    getNextId(),
+                    "Hello, I'm the Team PepsiCo Agent. How can I help you today?",
+                    'bot'
+                ),
+            ])
         }, 800)
     }
 
@@ -84,54 +56,101 @@ const ChatBot = () => {
         }
     }
 
-    const handleSend = () => {
+    const handleSend = async () => {
         const value = inputValue.trim()
         if (!value) return
 
-        const userMessage: Message = {
-            id: getNextId(),
-            text: value,
-            sender: 'user',
-            meta: createUserMeta(),
-        }
+        const userMessage = createMessage(getNextId(), value, 'user')
 
         setMessages((prev) => [...prev, userMessage])
         setInputValue('')
         setIsTyping(true)
 
-        setTimeout(() => {
-            const botReply: Message = {
-                id: getNextId(),
-                text: 'Thanks! Our team can help you with product setup, starter orders, and display recommendations for your store.',
-                sender: 'bot',
-                meta: createBotMeta(),
-            }
+        try {
+            const replyText = await askGemini(value)
+            const botReply = createMessage(getNextId(), replyText, 'bot')
 
             setIsTyping(false)
+            setShowFallbackPrompts(false)
             setMessages((prev) => [...prev, botReply])
-        }, 700)
+        } catch (error) {
+            console.error(error)
+
+            const fallbackReply = createMessage(
+                getNextId(),
+                FALLBACK_REPLY,
+                'bot'
+            )
+
+            setIsTyping(false)
+            setShowFallbackPrompts(true)
+            setMessages((prev) => [...prev, fallbackReply])
+        }
+    }
+
+    const handleVoiceInput = () => {
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition
+
+        if (!SpeechRecognition) {
+            const fallback = createMessage(
+                getNextId(),
+                'Voice input is not supported in this browser.',
+                'bot'
+            )
+
+            setShowFallbackPrompts(true)
+            setMessages((prev) => [...prev, fallback])
+            return
+        }
+
+        const recognition = new SpeechRecognition()
+        recognition.lang = 'en-US'
+        recognition.interimResults = false
+        recognition.maxAlternatives = 1
+
+        recognition.start()
+
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript
+            setInputValue(transcript)
+        }
+
+        recognition.onerror = () => {
+            const fallback = createMessage(
+                getNextId(),
+                'Sorry, I could not recognize your speech. Could you try again?',
+                'bot'
+            )
+
+            setShowFallbackPrompts(true)
+            setMessages((prev) => [...prev, fallback])
+        }
+    }
+
+    const handleActionClick = () => {
+        if (inputValue.trim()) {
+            void handleSend()
+            return
+        }
+
+        handleVoiceInput()
     }
 
     const handlePromptClick = (prompt: string) => {
-        const userMessage: Message = {
-            id: getNextId(),
-            text: prompt,
-            sender: 'user',
-            meta: createUserMeta(),
-        }
+        setShowFallbackPrompts(false)
+
+        const userMessage = createMessage(getNextId(), prompt, 'user')
 
         setMessages((prev) => [...prev, userMessage])
         setIsTyping(true)
 
         setTimeout(() => {
-            const botReply: Message = {
-                id: getNextId(),
-                text:
-                    promptReplies[prompt] ||
-                    'Thanks! We can help you with that.',
-                sender: 'bot',
-                meta: createBotMeta(),
-            }
+            const botReply = createMessage(
+                getNextId(),
+                promptReplies[prompt] || 'Thanks! We can help you with that.',
+                'bot'
+            )
 
             setIsTyping(false)
             setMessages((prev) => [...prev, botReply])
@@ -142,25 +161,23 @@ const ChatBot = () => {
         event
     ) => {
         if (event.key === 'Enter') {
-            handleSend()
+            void handleSend()
         }
-    }
-
-    if (!isOpen) {
-        return (
-            <button
-                type="button"
-                className="chatbot__launcher"
-                onClick={handleOpenChat}
-            >
-                <img src={chatLauncherIcon} alt="Open chat" width={120} />
-            </button>
-        )
     }
 
     return (
         <div className="chatbot">
-            <div className="chatbot__panel">
+            {!isOpen && (
+                <button
+                    type="button"
+                    className="chatbot__launcher"
+                    onClick={handleOpenChat}
+                >
+                    <img src={chatLauncherIcon} alt="Open chat" width={120} />
+                </button>
+            )}
+
+            <div className="chatbot__panel" data-open={isOpen}>
                 <div className="chatbot__header">
                     <div className="chatbot__title-group">
                         <img src={agentIcon} alt="Agent icon" width={28} />
@@ -190,36 +207,35 @@ const ChatBot = () => {
                                 {message.text}
                             </div>
 
-                            {message.meta && (
-                                <div className={'chatbot__meta'}>
-                                    {message.meta}
-                                </div>
-                            )}
+                            <div className="chatbot__meta">{message.meta}</div>
                         </div>
                     ))}
 
-                    {messages.length === 1 && !isTyping && (
-                        <div className="chatbot__prompts">
-                            {prompts.map((prompt) => (
-                                <button
-                                    key={prompt}
-                                    type="button"
-                                    className="chatbot__prompt"
-                                    onClick={() => handlePromptClick(prompt)}
-                                >
-                                    {prompt}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
                     {isTyping && (
                         <div className="chatbot__message-wrap--bot">
-                            <div className="chatbot__message--bot ">
+                            <div className="chatbot__message--bot">
                                 <img src={dotsIcon} alt="Typing" width={28} />
                             </div>
                         </div>
                     )}
+
+                    {(messages.length === 1 || showFallbackPrompts) &&
+                        !isTyping && (
+                            <div className="chatbot__prompts">
+                                {prompts.map((prompt) => (
+                                    <button
+                                        key={prompt}
+                                        type="button"
+                                        className="chatbot__prompt"
+                                        onClick={() =>
+                                            handlePromptClick(prompt)
+                                        }
+                                    >
+                                        {prompt}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                 </div>
 
                 <div className="chatbot__footer">
@@ -235,7 +251,7 @@ const ChatBot = () => {
                             className="chatbot__input"
                         />
 
-                        <button type="button" onClick={handleSend}>
+                        <button type="button" onClick={handleActionClick}>
                             <img src={voiceIcon} alt="voice icon" width={18} />
                         </button>
                     </div>
