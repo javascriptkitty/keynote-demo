@@ -4,15 +4,16 @@ export const FALLBACK_REPLY =
     'Sorry, I could not reach the assistant right now. We can still help with product setup, starter orders, and display recommendations.';
 
 export const askGemini = async (userText: string): Promise<string> => {
-    console.log(GEMINI_API_KEY);
     if (!GEMINI_API_KEY) {
         return FALLBACK_REPLY;
     }
 
     const prompt = `
-You are Team PepsiCo Agent for a demo chat on a PepsiCo retail page.
+You are Team PepsiCo Agent for a live chat on a PepsiCo retail page.
 Reply briefly and helpfully.
 Keep the answer under 60 words.
+If the user's request is unclear or incomplete, ask a follow-up question.
+When appropriate, guide the user with suggestions.
 Focus on store setup, product recommendations, promotions, cooler space, and getting Pepsi products into a store.
 
 User message: ${userText}
