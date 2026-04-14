@@ -26,6 +26,8 @@ const ChatBot = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [showFallbackPrompts, setShowFallbackPrompts] = useState(false);
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const messagesRef = useRef<HTMLDivElement | null>(null);
     const recognitionRef = useRef<any>(null);
@@ -60,6 +62,16 @@ const ChatBot = () => {
         }
     };
 
+    const handleClearChat = () => {
+        setMessages([]);
+        setInputValue('');
+        setIsTyping(false);
+        setIsListening(false);
+        setShowFallbackPrompts(false);
+        setIsMoreMenuOpen(false);
+        showWelcomeMessage();
+    };
+
     const handleSend = async () => {
         const value = inputValue.trim();
         if (!value) return;
@@ -69,6 +81,7 @@ const ChatBot = () => {
         setMessages((prev) => [...prev, userMessage]);
         setInputValue('');
         setIsTyping(true);
+        setIsMoreMenuOpen(false);
 
         try {
             const replyText = await askGemini(value);
@@ -145,6 +158,7 @@ const ChatBot = () => {
 
     const handlePromptClick = (prompt: string) => {
         setShowFallbackPrompts(false);
+        setIsMoreMenuOpen(false);
 
         const userMessage = createMessage(getNextId(), prompt, 'user');
 
@@ -171,7 +185,7 @@ const ChatBot = () => {
                 </button>
             )}
 
-            <div className="chatbot__panel" data-open={isOpen}>
+            <div className={`chatbot__panel ${isExpanded ? 'chatbot__panel--expanded' : ''}`} data-open={isOpen}>
                 <div className="chatbot__header">
                     <div className="chatbot__title-group">
                         <img src={agentIcon} alt="Agent icon" width={28} />
@@ -179,9 +193,31 @@ const ChatBot = () => {
                     </div>
 
                     <div className="chatbot__header-actions">
-                        <img src={dotsIcon} alt="Dots" width={16.8} />
-                        <img src={expandIcon} alt="Expand" width={16.8} />
-                        <button type="button" onClick={() => setIsOpen(false)}>
+                        <div className="chatbot__menu-wrap">
+                            <button type="button" onClick={() => setIsMoreMenuOpen((prev) => !prev)}>
+                                <img src={dotsIcon} alt="More options" width={16.8} />
+                            </button>
+
+                            {isMoreMenuOpen && (
+                                <div className="chatbot__menu">
+                                    <button type="button" onClick={handleClearChat}>
+                                        Clear chat
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <button type="button" onClick={() => setIsExpanded((prev) => !prev)}>
+                            <img src={expandIcon} alt="Expand" width={16.8} />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsMoreMenuOpen(false);
+                                setIsOpen(false);
+                            }}
+                        >
                             <img src={hideIcon} alt="Hide chat" width={16.8} />
                         </button>
                     </div>
